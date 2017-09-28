@@ -2,16 +2,15 @@ import cv2
 import numpy as np
 import time
 import threading
-import queue
 
 
 WIDTH = 640
 HEIGHT = 480
 
 
-class Camera(object):
+class Camera(threading.Thread):
     def __init__(self):
-        object.__init__(self)
+        threading.Thread.__init__(self)
 
         self.capture = cv2.VideoCapture(1)
         self.subtractor = cv2.createBackgroundSubtractorMOG2()
@@ -21,6 +20,7 @@ class Camera(object):
         self.last_rect = None
         self.left_move = 0
         self.right_move = 0
+        self.command = ""
 
         self.position = None
         self.last_tick = time.time()
@@ -28,9 +28,7 @@ class Camera(object):
 
         self.absent_count = 0
 
-        self.set_up()
-
-    def set_up(self):
+    def run(self):
         frame_count = 0
 
         while True:
@@ -124,17 +122,13 @@ class Camera(object):
 
         # 3 consecutive movements will determine the command
         if self.left_move == 3:
-            print("left!")
+            self.command = "left"
             self.clear_history()
         elif self.right_move == 3:
-            print("right!")
+            self.command = "right"
             self.clear_history()
 
     def clear_history(self):
         self.last_rect = None
         self.left_move = 0
         self.right_move = 0
-
-
-camera = Camera()
-camera.set_up()
