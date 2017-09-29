@@ -12,7 +12,7 @@ class Interface(object):
         object.__init__(self)
 
         pygame.init()
-        self.screen = pygame.display.set_mode((400, 300))
+        self.screen = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.done = False
 
@@ -24,10 +24,10 @@ class Interface(object):
         self.current_scene_name = "scene1"
 
         self.camera = Camera()
-        self.camera.daemon = True
         self.camera.start()
 
         self.weather_thread = WeatherThread(self)
+        self.weather_thread.daemon = True
         self.weather_thread.start()
 
     def start(self):
@@ -42,7 +42,9 @@ class Interface(object):
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_ESCAPE]:
-                self.done = True
+                self.terminate()
+            if pressed[pygame.K_LALT] and pressed[pygame.K_F4]:
+                self.terminate()
 
             # retrieve gesture command from camera module
             command = self.camera.command
@@ -73,6 +75,10 @@ class Interface(object):
         else:
             self.current_scene_name = "scene" + str(ind)
 
+    def terminate(self):
+        self.done = True
+        self.camera.done = True
+
 
 # basic scene class
 class Scene:
@@ -80,7 +86,7 @@ class Scene:
         self.next = self
 
         self.font1 = pygame.font.SysFont("segoe-ui-symbol", 20)
-        self.font2 = pygame.font.SysFont("Times New Roman", 15)
+        self.font2 = pygame.font.SysFont("Calibri", 15)
 
         self.WHITE = (255, 255, 255)
 
@@ -100,7 +106,7 @@ class Scene:
 
         time_str = "%02d:%02d:%02d" % (hour, minute, second)
         time_text = self.font2.render(time_str, True, self.WHITE)
-        screen.blit(time_text, (200, 10))
+        screen.blit(time_text, (150, 5))
 
 
 class Scene1(Scene):

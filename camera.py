@@ -12,6 +12,8 @@ class Camera(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
 
+        self.done = False
+
         self.capture = cv2.VideoCapture(1)
         self.subtractor = cv2.createBackgroundSubtractorMOG2()
         self.face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -31,7 +33,7 @@ class Camera(threading.Thread):
     def run(self):
         frame_count = 0
 
-        while True:
+        while not self.done:
             frame_count += 1
             # calculate the fps
             tick = time.time()
