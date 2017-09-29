@@ -1,10 +1,7 @@
 import requests
 import json
 import threading
-import socket
 import time
-import io
-from PIL import Image
 import api_keys
 
 # module for looking up weather and location
@@ -34,14 +31,12 @@ class WeatherThread(threading.Thread):
             # get the 24h weather information
             response = requests.get("https://api.uwaterloo.ca/v2/weather/current.json")
             content = json.loads(str(response.content, 'utf-8'))
+            temperature = content['data']['temperature_current_c']
             high_c = content['data']['temperature_24hr_max_c']
             low_c = content['data']['temperature_24hr_min_c']
 
-            information = {"city": city, "condition": condition, "icon_url": icon_url, "high_c": high_c, "low_c": low_c, "time": time.time()}
+            information = {"city": city, "condition": condition, "icon_url": icon_url, "temperature": temperature,
+                           "high_c": high_c, "low_c": low_c, "time": int(time.time())}
             self.parent.weather = information
 
             time.sleep(1800)
-
-
-thread = WeatherThread(None)
-thread.start()

@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 import pygame
 from camera import Camera
+from weather import WeatherThread
 
 # module for user interface
 
@@ -13,6 +15,8 @@ class Interface(object):
         self.clock = pygame.time.Clock()
         self.done = False
 
+        self.weather = {}
+
         self.scene1 = Scene1(self)
         self.scene2 = Scene2(self)
         self.scenes = {"scene1": self.scene1, "scene2": self.scene2}
@@ -22,9 +26,8 @@ class Interface(object):
         self.camera.daemon = True
         self.camera.start()
 
-        self.weather = {}
-
-        self.start()
+        self.weather_thread = WeatherThread(self)
+        self.weather_thread.start()
 
     def start(self):
         while not self.done:
@@ -79,8 +82,10 @@ class Scene1(Scene):
         self.parent = parent
         self.last_update = 0
 
+        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 20)
+
     def render(self, screen):
-        screen.fill((0, 255, 0))
+        screen.fill((0, 0, 0))
 
         if self.parent.weather:
             self.display_weather(screen)
@@ -91,6 +96,12 @@ class Scene1(Scene):
         # check whether the weather info has been updated
         if weather_info['time'] == self.last_update:
             return
+
+        city = weather_info['city']
+        temp = weather_info['temperature']
+        weather_text = self.font1.render(city + ": " + str(temp) + "℃", True, (255, 255, 255))
+
+        screen.blit(weather_text, (20, 20))
 
 
 class Scene2(Scene):
