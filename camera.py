@@ -134,6 +134,9 @@ class Camera(threading.Thread):
             self.command = "right"
             self.clear_history()
 
+        # stop the camera to avoid redundant commands
+        time.sleep(0.3)
+
     def clear_history(self):
         self.last_rect = None
         self.left_move = 0

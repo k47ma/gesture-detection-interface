@@ -2,6 +2,7 @@
 import pygame
 from camera import Camera
 from weather import WeatherThread
+import time
 
 # module for user interface
 
@@ -20,7 +21,7 @@ class Interface(object):
         self.scene1 = Scene1(self)
         self.scene2 = Scene2(self)
         self.scenes = {"scene1": self.scene1, "scene2": self.scene2}
-        self.current_scene = "scene1"
+        self.current_scene_name = "scene1"
 
         self.camera = Camera()
         self.camera.daemon = True
@@ -34,30 +35,43 @@ class Interface(object):
             self.clock.tick(60)
 
             for event in pygame.event.get():
-                if event == pygame.QUIT:
+                if event.type == pygame.QUIT:
                     self.done = True
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.switch_scene()
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_ESCAPE]:
                 self.done = True
 
-            # command for testing
-            if pressed[pygame.K_1]:
-                self.current_scene = "scene1"
-            if pressed[pygame.K_2]:
-                self.current_scene = "scene2"
-
             # retrieve gesture command from camera module
             command = self.camera.command
             if command:
-                if command == "right" and self.current_scene == "scene1":
-                    self.current_scene = "scene2"
-                elif command == "left" and self.current_scene == "scene2":
-                    self.current_scene = "scene1"
+                self.switch_scene(command)
+                self.camera.command = ""
 
-            self.scenes[self.current_scene].render(self.screen)
+            current_scene = self.scenes[self.current_scene_name]
+            current_scene.refresh(self.screen)
+            current_scene.render(self.screen)
+            current_scene.display_general(self.screen)
 
             pygame.display.flip()
+
+    def switch_scene(self, direction="right"):
+        total = len(self.scenes)
+        current_ind = int(self.current_scene_name[-1])
+
+        if direction == "right":
+            ind = current_ind + 1
+        else:
+            ind = current_ind - 1
+
+        if ind > total:
+            self.current_scene_name = "scene1"
+        elif ind == 0:
+            self.current_scene_name = "scene" + str(total)
+        else:
+            self.current_scene_name = "scene" + str(ind)
 
 
 # basic scene class
@@ -65,14 +79,28 @@ class Scene:
     def __init__(self):
         self.next = self
 
+        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 20)
+        self.font2 = pygame.font.SysFont("Times New Roman", 15)
+
+        self.WHITE = (255, 255, 255)
+
     def render(self, screen):
         pass
 
-    def update(self):
+    def refresh(self, screen):
         pass
 
     def process_input(self, events):
         pass
+
+    def display_general(self, screen):
+        current_time = time.localtime(time.time())
+
+        year, month, day, hour, minute, second, week_day = current_time[:7]
+
+        time_str = "%02d:%02d:%02d" % (hour, minute, second)
+        time_text = self.font2.render(time_str, True, self.WHITE)
+        screen.blit(time_text, (200, 10))
 
 
 class Scene1(Scene):
@@ -82,11 +110,10 @@ class Scene1(Scene):
         self.parent = parent
         self.last_update = 0
 
-        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 20)
-
-    def render(self, screen):
+    def refresh(self, screen):
         screen.fill((0, 0, 0))
 
+    def render(self, screen):
         if self.parent.weather:
             self.display_weather(screen)
 
@@ -99,7 +126,7 @@ class Scene1(Scene):
 
         city = weather_info['city']
         temp = weather_info['temperature']
-        weather_text = self.font1.render(city + ": " + str(temp) + "℃", True, (255, 255, 255))
+        weather_text = self.font1.render(city + ": " + str(temp) + "℃", True, self.WHITE)
 
         screen.blit(weather_text, (20, 20))
 
