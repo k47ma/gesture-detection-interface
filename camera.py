@@ -49,32 +49,13 @@ class Camera(threading.Thread):
             result, frame = self.capture.read()
 
             # process the image to subtract the background
-            self.current_frame = cv2.resize(frame, (WIDTH, HEIGHT))
-            self.current_frame = cv2.flip(self.current_frame, 1)
-            gray = cv2.cvtColor(self.current_frame, cv2.COLOR_BGR2GRAY)
-            blur = cv2.GaussianBlur(gray, (5, 5), 0)
-            fg = self.subtractor.apply(blur)
-            ret, thresh = cv2.threshold(fg, 80, 255, cv2.THRESH_BINARY)
+            processed_img = self.process_image(frame)
 
             # print fps to the image
             cv2.putText(self.current_frame, 'fps: %d.1' % self.fps, (10, 20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-            # detect face from frame
-            face = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-            for (x, y, w, h) in face:
-                cv2.rectangle(self.current_frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-
-            # determine whether the user is present
-            if len(face):
-                self.absent_count = 0
-            else:
-                self.absent_count += 1
-
-            if self.absent_count == 60:
-                self.absent_count = 0
-
             # find the contour of the changed area
-            img, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            img, contours, hierarchy = cv2.findContours(processed_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
             # foreground detected
             if bool(contours):
@@ -103,6 +84,31 @@ class Camera(threading.Thread):
 
         self.capture.release()
         cv2.destroyAllWindows()
+
+    def process_image(self, img):
+        self.current_frame = cv2.resize(img, (WIDTH, HEIGHT))
+        self.current_frame = cv2.flip(self.current_frame, 1)
+        gray = cv2.cvtColor(self.current_frame, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        fg = self.subtractor.apply(blur)
+        ret, thresh = cv2.threshold(fg, 80, 255, cv2.THRESH_BINARY)
+        self.detect_face(gray)
+        return thresh
+
+    def detect_face(self, img):
+        # detect face from frame
+        face = self.face_cascade.detectMultiScale(img, 1.3, 5)
+        for (x, y, w, h) in face:
+            cv2.rectangle(self.current_frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        # determine whether the user is present
+        if len(face):
+            self.absent_count = 0
+        else:
+            self.absent_count += 1
+
+        if self.absent_count == 60:
+            self.absent_count = 0
 
     def check_command(self, rect):
         if self.last_rect is None:

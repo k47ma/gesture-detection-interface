@@ -1,6 +1,8 @@
 import pygame
 from camera import Camera
 
+# module for user interface
+
 
 class Interface(object):
     def __init__(self):
@@ -11,14 +13,16 @@ class Interface(object):
         self.clock = pygame.time.Clock()
         self.done = False
 
-        self.scene1 = Scene1()
-        self.scene2 = Scene2()
+        self.scene1 = Scene1(self)
+        self.scene2 = Scene2(self)
         self.scenes = {"scene1": self.scene1, "scene2": self.scene2}
         self.current_scene = "scene1"
 
         self.camera = Camera()
         self.camera.daemon = True
         self.camera.start()
+
+        self.weather = {}
 
         self.start()
 
@@ -34,6 +38,13 @@ class Interface(object):
             if pressed[pygame.K_ESCAPE]:
                 self.done = True
 
+            # command for testing
+            if pressed[pygame.K_1]:
+                self.current_scene = "scene1"
+            if pressed[pygame.K_2]:
+                self.current_scene = "scene2"
+
+            # retrieve gesture command from camera module
             command = self.camera.command
             if command:
                 if command == "right" and self.current_scene == "scene1":
@@ -62,16 +73,31 @@ class Scene:
 
 
 class Scene1(Scene):
-    def __init__(self):
+    def __init__(self, parent):
         Scene.__init__(self)
+
+        self.parent = parent
+        self.last_update = 0
 
     def render(self, screen):
         screen.fill((0, 255, 0))
 
+        if self.parent.weather:
+            self.display_weather(screen)
+
+    def display_weather(self, screen):
+        weather_info = self.parent.weather
+
+        # check whether the weather info has been updated
+        if weather_info['time'] == self.last_update:
+            return
+
 
 class Scene2(Scene):
-    def __init__(self):
+    def __init__(self, parent):
         Scene.__init__(self)
+
+        self.parent = parent
 
     def render(self, screen):
         screen.fill((255, 0, 0))
