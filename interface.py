@@ -7,12 +7,16 @@ import time
 # module for user interface
 
 
+WIDTH = 1920
+HEIGHT = 1080
+
+
 class Interface(object):
     def __init__(self):
         object.__init__(self)
 
         pygame.init()
-        self.screen = pygame.display.set_mode((1280, 720), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.done = False
 
@@ -82,11 +86,12 @@ class Interface(object):
 
 # basic scene class
 class Scene:
-    def __init__(self):
+    def __init__(self, parent):
+        self.parent = parent
         self.next = self
 
-        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 20)
-        self.font2 = pygame.font.SysFont("Calibri", 15)
+        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 30)
+        self.font2 = pygame.font.SysFont("Calibri", 18)
 
         self.WHITE = (255, 255, 255)
 
@@ -106,14 +111,14 @@ class Scene:
 
         time_str = "%02d:%02d:%02d" % (hour, minute, second)
         time_text = self.font2.render(time_str, True, self.WHITE)
-        screen.blit(time_text, (150, 5))
+
+        screen.blit(time_text, (500, 5))
 
 
 class Scene1(Scene):
     def __init__(self, parent):
-        Scene.__init__(self)
+        Scene.__init__(self, parent)
 
-        self.parent = parent
         self.last_update = 0
 
     def refresh(self, screen):
@@ -122,6 +127,7 @@ class Scene1(Scene):
     def render(self, screen):
         if self.parent.weather:
             self.display_weather(screen)
+        self.display_greeting(screen)
 
     def display_weather(self, screen):
         weather_info = self.parent.weather
@@ -134,14 +140,30 @@ class Scene1(Scene):
         temp = weather_info['temperature']
         weather_text = self.font1.render(city + ": " + str(temp) + "℃", True, self.WHITE)
 
-        screen.blit(weather_text, (20, 20))
+        screen.blit(weather_text, (100, 90))
 
+    def display_greeting(self, screen):
+        current_time = time.localtime(time.time())
+        year, month, day, hour, minute, second, week_day = current_time[:7]
+
+        if 6 <= hour < 12:
+            d = "morning"
+        elif 12 <= hour <= 17:
+            d = "afternoon"
+        else:
+            d = "evening"
+
+        if self.parent.camera.present:
+            user = " Kai"
+        else:
+            user = ""
+
+        greeting_text = self.font1.render("Hi" + user + ", Good " + d + "!", True, self.WHITE)
+        screen.blit(greeting_text, (100, 30))
 
 class Scene2(Scene):
     def __init__(self, parent):
-        Scene.__init__(self)
-
-        self.parent = parent
+        Scene.__init__(self, parent)
 
     def render(self, screen):
         screen.fill((255, 0, 0))

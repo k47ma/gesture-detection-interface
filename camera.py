@@ -18,6 +18,8 @@ class Camera(threading.Thread):
         self.subtractor = cv2.createBackgroundSubtractorMOG2()
         self.face_cascade = cv2.CascadeClassifier('xml\\haarcascade_frontalface_default.xml')
 
+        self.present = False
+
         self.current_frame = None
         self.signal = False
         self.color = (250, 215, 155)
@@ -156,10 +158,12 @@ class Camera(threading.Thread):
         # determine whether the user is present
         if len(face):
             self.absent_count = 0
+            self.present = True
         else:
             self.absent_count += 1
 
         if self.absent_count == 60:
+            self.present = False
             self.absent_count = 0
 
     def check_command(self, rect):
