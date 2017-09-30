@@ -92,7 +92,7 @@ class Camera(threading.Thread):
             else:
                 self.clear_history()
 
-            cv2.imshow('camera', self.current_frame)
+            #cv2.imshow('camera', self.current_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

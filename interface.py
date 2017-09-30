@@ -3,9 +3,10 @@ import pygame
 from camera import Camera
 from weather import WeatherThread
 import time
+from urllib.request import urlopen
+import io
 
 # module for user interface
-
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -91,7 +92,8 @@ class Scene:
         self.next = self
 
         self.font1 = pygame.font.SysFont("segoe-ui-symbol", 30)
-        self.font2 = pygame.font.SysFont("Calibri", 18)
+        self.font2 = pygame.font.SysFont("Calibri", 23, bold=True)
+        self.font3 = pygame.font.SysFont("segoe-ui-symbol", 25)
 
         self.WHITE = (255, 255, 255)
 
@@ -121,28 +123,52 @@ class Scene1(Scene):
 
         self.last_update = 0
 
+        self.icons = {}
+
     def refresh(self, screen):
         screen.fill((0, 0, 0))
 
     def render(self, screen):
         if self.parent.weather:
-            self.display_weather(screen)
-        self.display_greeting(screen)
+            self.display_weather(screen, (800, 30))
+        self.display_greeting(screen, (100, 30))
 
-    def display_weather(self, screen):
+    def display_weather(self, screen, coords):
+        x, y = coords
         weather_info = self.parent.weather
 
         # check whether the weather info has been updated
         if weather_info['time'] == self.last_update:
             return
 
+        # display city and condition
         city = weather_info['city']
-        temp = weather_info['temperature']
-        weather_text = self.font1.render(city + ": " + str(temp) + "℃", True, self.WHITE)
+        condition = weather_info['condition']
 
-        screen.blit(weather_text, (100, 90))
+        city_text = self.font1.render(city, True, self.WHITE)
+        condition_text = self.font3.render(condition, True, self.WHITE)
 
-    def display_greeting(self, screen):
+        screen.blit(city_text, (x+20, y))
+        screen.blit(condition_text, (x, y+45))
+
+        # load image from web if the icon is not locally stored
+        if condition not in self.icons:
+            self.load_image(weather_info)
+        icon = self.icons[condition]
+        screen.blit(icon, (x-10, y+80))
+
+        # display temperature
+        temp = str(weather_info['temperature'])
+        high = str(weather_info['high_c'])
+        low = str(weather_info['low_c'])
+
+        temp_text = self.font1.render(temp + "℃", True, self.WHITE)
+        temp_range_text = self.font1.render(low + " - " + high + "℃", True, self.WHITE)
+        screen.blit(temp_text, (x+60, y+90))
+        screen.blit(temp_range_text, (x, y+135))
+
+    def display_greeting(self, screen, coords):
+        x, y = coords
         current_time = time.localtime(time.time())
         year, month, day, hour, minute, second, week_day = current_time[:7]
 
@@ -158,8 +184,23 @@ class Scene1(Scene):
         else:
             user = ""
 
-        greeting_text = self.font1.render("Hi" + user + ", Good " + d + "!", True, self.WHITE)
-        screen.blit(greeting_text, (100, 30))
+        greeting_text = self.font1.render("Hi" + user + ",", True, self.WHITE)
+        greeting_text2 = self.font1.render("Good " + d + "!", True, self.WHITE)
+        screen.blit(greeting_text, (x, y))
+        screen.blit(greeting_text2, (x, y+45))
+
+    def load_image(self, weather_info):
+        condition = weather_info['condition']
+        icon_url = weather_info['icon_url']
+
+        # load image from url
+        image = urlopen(icon_url).read()
+        image_file = io.BytesIO(image)
+
+        # add image object to dictionary
+        icon = pygame.image.load(image_file)
+        self.icons[condition] = icon
+
 
 class Scene2(Scene):
     def __init__(self, parent):
