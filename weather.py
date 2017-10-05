@@ -16,14 +16,14 @@ class WeatherThread(threading.Thread):
     def run(self):
         while True:
             # get the current ip address and city
-            response = requests.get("https://ipfind.co/me?auth=" + api_keys.ip_key)
+            response = requests.get("https://ipfind.co/me?auth=81f6b6dd-9a71-40c9-afd3-df87942266e9")
             content = json.loads(str(response.content, 'utf-8'))
 
             ip_address = content['ip_address']
             city = content['city']
 
             # get the current weather information
-            response = requests.get("http://api.apixu.com/v1/current.json?key=" + api_keys.weather_key + "&q=" + ip_address)
+            response = requests.get("http://api.apixu.com/v1/current.json?key=e6b55e0ed58e42c2abf00045172909&q=" + ip_address)
             content = json.loads(str(response.content, 'utf-8'))
             condition = content['current']['condition']['text']
             icon_url = "http:" + content['current']['condition']['icon']

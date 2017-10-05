@@ -17,7 +17,7 @@ class Interface(object):
         object.__init__(self)
 
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
         self.done = False
 
@@ -41,7 +41,7 @@ class Interface(object):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.done = True
+                    self.terminate()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     self.switch_scene()
 
