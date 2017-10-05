@@ -14,7 +14,7 @@ class Camera(threading.Thread):
 
         self.done = False
 
-        self.capture = cv2.VideoCapture(1)
+        self.capture = cv2.VideoCapture(0)
         self.subtractor = cv2.createBackgroundSubtractorMOG2()
         self.face_cascade = cv2.CascadeClassifier('xml\\haarcascade_frontalface_default.xml')
 
