@@ -2,7 +2,6 @@ import requests
 import json
 import threading
 import time
-import api_keys
 
 # module for looking up weather and location
 
