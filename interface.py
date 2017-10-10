@@ -125,12 +125,17 @@ class Scene1(Scene):
 
         self.icons = {}
 
+        self.message1 = self.font1.render("Retrieving weather data...", True, self.WHITE)
+
     def refresh(self, screen):
         screen.fill((0, 0, 0))
 
     def render(self, screen):
+
         if self.parent.weather:
             self.display_weather(screen, (800, 30))
+        else:
+            screen.blit(self.message1, (800, 30))
         self.display_greeting(screen, (100, 30))
 
     def display_weather(self, screen, coords):
@@ -166,6 +171,15 @@ class Scene1(Scene):
         temp_range_text = self.font1.render(low + " - " + high + "℃", True, self.WHITE)
         screen.blit(temp_text, (x+60, y+90))
         screen.blit(temp_range_text, (x, y+135))
+
+        # display forecast information
+        fy = y + 180
+        for forecast in weather_info['forecasts']:
+            forecast_time = forecast[0][11:13]
+            forecast_temp = str(forecast[1], 'utf-8')
+            forecast_text = self.font3.render(forecast_time + " " + forecast_temp + "℃", True, self.WHITE)
+            screen.blit(forecast_text, (x, fy))
+            fy += 45
 
     def display_greeting(self, screen, coords):
         x, y = coords
