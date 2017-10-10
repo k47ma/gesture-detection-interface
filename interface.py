@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import pygame
+import time
+import io
+from urllib.request import urlopen
 from camera import Camera
 from weather import WeatherThread
-import time
-from urllib.request import urlopen
-import io
+from news import NewsThread
+
 
 # module for user interface
 
@@ -21,7 +23,8 @@ class Interface(object):
         self.clock = pygame.time.Clock()
         self.done = False
 
-        self.weather = {}
+        self.weather = None
+        self.news = None
 
         self.scene1 = Scene1(self)
         self.scene2 = Scene2(self)
@@ -34,6 +37,10 @@ class Interface(object):
         self.weather_thread = WeatherThread(self)
         self.weather_thread.daemon = True
         self.weather_thread.start()
+
+        self.news_thread = NewsThread(self)
+        self.news_thread.daemon = True
+        self.news_thread.start()
 
     def start(self):
         while not self.done:
@@ -92,6 +99,7 @@ class Scene:
         self.next = self
 
         self.font1 = pygame.font.SysFont("segoe-ui-symbol", 30)
+        self.font1_bold = pygame.font.SysFont("segoe-ui-symbol", 30, bold=True)
         self.font2 = pygame.font.SysFont("Calibri", 23, bold=True)
         self.font3 = pygame.font.SysFont("segoe-ui-symbol", 25)
 
@@ -167,7 +175,7 @@ class Scene1(Scene):
         high = str(weather_info['high_c'])
         low = str(weather_info['low_c'])
 
-        temp_text = self.font1.render(temp + "℃", True, self.WHITE)
+        temp_text = self.font1_bold.render(temp + "℃", True, self.WHITE)
         temp_range_text = self.font1.render(low + " - " + high + "℃", True, self.WHITE)
         screen.blit(temp_text, (x+60, y+90))
         screen.blit(temp_range_text, (x, y+135))
@@ -176,7 +184,7 @@ class Scene1(Scene):
         fy = y + 180
         for forecast in weather_info['forecasts']:
             forecast_time = forecast[0][11:13]
-            forecast_temp = str(forecast[1], 'utf-8')
+            forecast_temp = "%.1f" % forecast[1]
             forecast_text = self.font3.render(forecast_time + " " + forecast_temp + "℃", True, self.WHITE)
             screen.blit(forecast_text, (x, fy))
             fy += 45

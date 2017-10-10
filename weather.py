@@ -34,12 +34,12 @@ class WeatherThread(threading.Thread):
             params = {'q': city + country, 'units': "metric", 'appid': "508b76be5129c25115e5e60848b4c20c"}
             response = requests.get("http://api.openweathermap.org/data/2.5/forecast", params=params)
             content = json.loads(str(response.content, 'utf-8'))
-            forecasts = content.list[:7]
+            forecasts = content['list'][:7]
 
             high_c = self.get_highest(forecasts)
             low_c = self.get_lowest(forecasts)
 
-            formatted_forecasts = [(forecast['dy_text'], forecast['main']['temp']) for forecast in forecasts]
+            formatted_forecasts = [(forecast['dt_txt'], forecast['main']['temp']) for forecast in forecasts]
 
             information = {"city": city, "condition": condition, "icon_url": icon_url, "temperature": temperature,
                            "high_c": high_c, "low_c": low_c, "forecasts": formatted_forecasts, "time": int(time.time())}
