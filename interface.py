@@ -98,10 +98,12 @@ class Scene:
         self.parent = parent
         self.next = self
 
-        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 30)
+        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 32)
         self.font1_bold = pygame.font.SysFont("segoe-ui-symbol", 30, bold=True)
-        self.font2 = pygame.font.SysFont("Calibri", 23, bold=True)
+        self.font2 = pygame.font.SysFont("Calibri", 28, bold=True)
         self.font3 = pygame.font.SysFont("segoe-ui-symbol", 25)
+        self.font4 = pygame.font.SysFont("Times New Roman", 18)
+        self.font5 = pygame.font.SysFont("segoe-ui-symbol", 50)
 
         self.WHITE = (255, 255, 255)
 
@@ -122,72 +124,35 @@ class Scene:
         time_str = "%02d:%02d:%02d" % (hour, minute, second)
         time_text = self.font2.render(time_str, True, self.WHITE)
 
-        screen.blit(time_text, (500, 5))
+        screen.blit(time_text, (900, 10))
 
 
 class Scene1(Scene):
     def __init__(self, parent):
         Scene.__init__(self, parent)
 
-        self.last_update = 0
-
         self.icons = {}
 
         self.message1 = self.font1.render("Retrieving weather data...", True, self.WHITE)
+        self.message2 = self.font1.render("Retrieving news data...", True, self.WHITE)
 
     def refresh(self, screen):
         screen.fill((0, 0, 0))
 
     def render(self, screen):
+        self.display_greeting(screen, (100, 75))
 
+        # display weather information
         if self.parent.weather:
-            self.display_weather(screen, (800, 30))
+            self.display_weather(screen, (1200, 150))
         else:
-            screen.blit(self.message1, (800, 30))
-        self.display_greeting(screen, (100, 30))
+            screen.blit(self.message1, (1200, 150))
 
-    def display_weather(self, screen, coords):
-        x, y = coords
-        weather_info = self.parent.weather
-
-        # check whether the weather info has been updated
-        if weather_info['time'] == self.last_update:
-            return
-
-        # display city and condition
-        city = weather_info['city']
-        condition = weather_info['condition']
-
-        city_text = self.font1.render(city, True, self.WHITE)
-        condition_text = self.font3.render(condition, True, self.WHITE)
-
-        screen.blit(city_text, (x+20, y))
-        screen.blit(condition_text, (x, y+45))
-
-        # load image from web if the icon is not locally stored
-        if condition not in self.icons:
-            self.load_image(weather_info)
-        icon = self.icons[condition]
-        screen.blit(icon, (x-10, y+80))
-
-        # display temperature
-        temp = str(weather_info['temperature'])
-        high = str(weather_info['high_c'])
-        low = str(weather_info['low_c'])
-
-        temp_text = self.font1_bold.render(temp + "℃", True, self.WHITE)
-        temp_range_text = self.font1.render(low + " - " + high + "℃", True, self.WHITE)
-        screen.blit(temp_text, (x+60, y+90))
-        screen.blit(temp_range_text, (x, y+135))
-
-        # display forecast information
-        fy = y + 180
-        for forecast in weather_info['forecasts']:
-            forecast_time = forecast[0][11:13]
-            forecast_temp = "%.1f" % forecast[1]
-            forecast_text = self.font3.render(forecast_time + " " + forecast_temp + "℃", True, self.WHITE)
-            screen.blit(forecast_text, (x, fy))
-            fy += 45
+        # display news
+        if self.parent.news:
+            self.display_news(screen, (100, 250))
+        else:
+            screen.blit(self.message2, (100, 250))
 
     def display_greeting(self, screen, coords):
         x, y = coords
@@ -206,10 +171,71 @@ class Scene1(Scene):
         else:
             user = ""
 
-        greeting_text = self.font1.render("Hi" + user + ",", True, self.WHITE)
-        greeting_text2 = self.font1.render("Good " + d + "!", True, self.WHITE)
+        greeting_text = self.font5.render("Hi" + user + ",", True, self.WHITE)
+        greeting_text2 = self.font5.render("Good " + d + "!", True, self.WHITE)
         screen.blit(greeting_text, (x, y))
-        screen.blit(greeting_text2, (x, y+45))
+        screen.blit(greeting_text2, (x, y+55))
+
+    def display_weather(self, screen, coords):
+        x, y = coords
+        weather_info = self.parent.weather
+
+        # display city and condition
+        city = weather_info['city']
+        condition = weather_info['condition']
+
+        city_text = self.font1.render(city, True, self.WHITE)
+        condition_text = self.font3.render(condition, True, self.WHITE)
+
+        screen.blit(city_text, (x+20, y))
+        screen.blit(condition_text, (x, y+45))
+
+        # load image from web if the icon is not locally stored
+        if condition not in self.icons:
+            self.load_image(weather_info)
+        icon = self.icons[condition]
+        screen.blit(icon, (x-10, y+100))
+        # display temperature
+        temp = str(weather_info['temperature'])
+        high = str(weather_info['high_c'])
+        low = str(weather_info['low_c'])
+
+        temp_text = self.font1_bold.render(temp + "℃", True, self.WHITE)
+        temp_range_text = self.font1.render("24h: " + low + " - " + high + "℃", True, self.WHITE)
+        screen.blit(temp_text, (x+60, y+110))
+        screen.blit(temp_range_text, (x, y+155))
+
+        # display forecast information
+        fy = y + 220
+        for forecast in weather_info['forecasts']:
+            forecast_time = forecast[0][11:13]
+            forecast_temp = "%.1f" % forecast[1]
+            forecast_text = self.font3.render(forecast_time + " " + forecast_temp + "℃", True, self.WHITE)
+            screen.blit(forecast_text, (x, fy))
+            fy += 45
+
+        # display last update time
+        last_update = time.asctime(time.localtime(weather_info['time']))[11:16]
+        last_update_text = self.font4.render("Last update: " + last_update, True, self.WHITE)
+        screen.blit(last_update_text, (x, fy+10))
+
+    def display_news(self, screen, coords):
+        x, y = coords
+        news = self.parent.news
+
+        default_text = self.font3.render("What's new today:", True, self.WHITE)
+        screen.blit(default_text, (x, y))
+        y += 50
+
+        for article in news['articles']:
+            article_text = self.font3.render(article['title'], True, self.WHITE)
+            screen.blit(article_text, (x, y))
+            y += 45
+
+        # display last update time
+        last_update = time.asctime(time.localtime(news['time']))[11:16]
+        last_update_text = self.font4.render("Last update: " + last_update, True, self.WHITE)
+        screen.blit(last_update_text, (x, y+10))
 
     def load_image(self, weather_info):
         condition = weather_info['condition']
@@ -230,6 +256,46 @@ class Scene2(Scene):
 
     def render(self, screen):
         screen.fill((255, 0, 0))
+
+
+# draw some text into an area of a surface
+# automatically wraps words
+# returns any text that didn't get blitted
+def drawText(surface, text, color, rect, font, aa=False, bkg=None):
+    rect = pygame.Rect(rect)
+    y = rect.top
+    lineSpacing = -2
+
+    # get the height of the font
+    fontHeight = font.size("Tg")[1]
+
+    while text:
+        i = 1
+
+        # determine if the row of text will be outside our area
+        if y + fontHeight < rect.bottom:
+            break
+
+        # determine maximum width of line
+        while font.size(text[:i])[0] < rect.width and i < len(text):
+            i += 1
+
+        # if we've wrapped the text, then adjust the wrap to the last word
+        if i < len(text):
+            i = text.rfind(" ", 0, i) + 1
+
+        # render the line and blit it to the surface
+        if bkg:
+            image = font.render(text[:i], 1, color, bkg)
+            image.set_colorkey(bkg)
+        else:
+            image = font.render(text[:i], aa, color)
+
+        surface.blit(image, (rect.left, y))
+        y += fontHeight + lineSpacing
+
+        # remove the text we just blitted
+        text = text[i:]
 
 
 app = Interface()

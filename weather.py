@@ -36,8 +36,8 @@ class WeatherThread(threading.Thread):
             content = json.loads(str(response.content, 'utf-8'))
             forecasts = content['list'][:7]
 
-            high_c = self.get_highest(forecasts)
-            low_c = self.get_lowest(forecasts)
+            high_c = int(self.get_highest(forecasts))
+            low_c = int(self.get_lowest(forecasts))
 
             formatted_forecasts = [(forecast['dt_txt'], forecast['main']['temp']) for forecast in forecasts]
 

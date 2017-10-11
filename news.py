@@ -13,7 +13,14 @@ class NewsThread(threading.Thread):
         self.parent = parent
 
     def run(self):
-        # retrieve news data
-        params = {'source': "cnn", 'sortBy': "top", 'apiKey': "d094eb3adb9c4548b22946efdc417e17"}
-        response = requests.get("https://newsapi.org/v1/articles", params=params)
-        content = json.loads(str(response.content, 'utf-8'))
+        while True:
+            # retrieve news data
+            params = {'source': "cnn", 'sortBy': "top", 'apiKey': "d094eb3adb9c4548b22946efdc417e17"}
+            response = requests.get("https://newsapi.org/v1/articles", params=params)
+            content = json.loads(str(response.content, 'utf-8'))
+
+            articles = content['articles']
+            self.parent.news = {'articles': articles, 'time': int(time.time())}
+
+            # update every 15 min
+            time.sleep(900)
