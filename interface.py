@@ -3,7 +3,7 @@ import pygame
 import time
 import io
 from urllib.request import urlopen
-from camera import Camera
+#from camera import Camera
 from weather import WeatherThread
 from news import NewsThread
 
@@ -19,7 +19,8 @@ class Interface(object):
         object.__init__(self)
 
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.mouse.set_visible(False)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.done = False
 
@@ -30,9 +31,9 @@ class Interface(object):
         self.scene2 = Scene2(self)
         self.scenes = {"scene1": self.scene1, "scene2": self.scene2}
         self.current_scene_name = "scene1"
-
-        self.camera = Camera()
-        self.camera.start()
+        
+        #self.camera = Camera()
+        #self.camera.start()
 
         self.weather_thread = WeatherThread(self)
         self.weather_thread.daemon = True
@@ -59,10 +60,12 @@ class Interface(object):
                 self.terminate()
 
             # retrieve gesture command from camera module
+            """
             command = self.camera.command
             if command:
                 self.switch_scene(command)
                 self.camera.command = ""
+            """
 
             current_scene = self.scenes[self.current_scene_name]
             current_scene.refresh(self.screen)
@@ -89,7 +92,7 @@ class Interface(object):
 
     def terminate(self):
         self.done = True
-        self.camera.done = True
+        #self.camera.done = True
 
 
 # basic scene class
@@ -98,12 +101,12 @@ class Scene:
         self.parent = parent
         self.next = self
 
-        self.font1 = pygame.font.SysFont("segoe-ui-symbol", 32)
-        self.font1_bold = pygame.font.SysFont("segoe-ui-symbol", 30, bold=True)
+        self.font1 = pygame.font.SysFont("Arial", 35)
+        self.font1_bold = pygame.font.SysFont("Arial", 35, bold=True)
         self.font2 = pygame.font.SysFont("Calibri", 28, bold=True)
-        self.font3 = pygame.font.SysFont("segoe-ui-symbol", 25)
+        self.font3 = pygame.font.SysFont("Arial", 30)
         self.font4 = pygame.font.SysFont("Times New Roman", 18)
-        self.font5 = pygame.font.SysFont("segoe-ui-symbol", 50)
+        self.font5 = pygame.font.SysFont("Arial", 55)
 
         self.WHITE = (255, 255, 255)
 
@@ -144,9 +147,9 @@ class Scene1(Scene):
 
         # display weather information
         if self.parent.weather:
-            self.display_weather(screen, (1200, 150))
+            self.display_weather(screen, (1300, 150))
         else:
-            screen.blit(self.message1, (1200, 150))
+            screen.blit(self.message1, (1300, 150))
 
         # display news
         if self.parent.news:
@@ -165,16 +168,19 @@ class Scene1(Scene):
             d = "afternoon"
         else:
             d = "evening"
-
+        
+        """
         if self.parent.camera.present:
             user = " Kai"
         else:
             user = ""
+        """
+        user = "Kai"
 
-        greeting_text = self.font5.render("Hi" + user + ",", True, self.WHITE)
+        greeting_text = self.font5.render("Hi " + user + ",", True, self.WHITE)
         greeting_text2 = self.font5.render("Good " + d + "!", True, self.WHITE)
         screen.blit(greeting_text, (x, y))
-        screen.blit(greeting_text2, (x, y+55))
+        screen.blit(greeting_text2, (x, y+65))
 
     def display_weather(self, screen, coords):
         x, y = coords
@@ -230,7 +236,7 @@ class Scene1(Scene):
         for article in news['articles']:
             article_text = self.font3.render(article['title'], True, self.WHITE)
             screen.blit(article_text, (x, y))
-            y += 45
+            y += 50
 
         # display last update time
         last_update = time.asctime(time.localtime(news['time']))[11:16]
