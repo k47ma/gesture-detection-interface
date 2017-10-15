@@ -6,12 +6,15 @@ from urllib.request import urlopen
 #from camera import Camera
 from weather import WeatherThread
 from news import NewsThread
+from utility import *
 
 
 # module for user interface
 
+NAME = ""
 WIDTH = 1920
 HEIGHT = 1080
+WHITE = (255, 255, 255)
 
 
 class Interface(object):
@@ -101,12 +104,13 @@ class Scene:
         self.parent = parent
         self.next = self
 
-        self.font1 = pygame.font.SysFont("Arial", 35)
+        self.font1 = pygame.font.SysFont("Arial Unicode MS", 35)
         self.font1_bold = pygame.font.SysFont("Arial", 35, bold=True)
         self.font2 = pygame.font.SysFont("Calibri", 28, bold=True)
         self.font3 = pygame.font.SysFont("Arial", 30)
         self.font4 = pygame.font.SysFont("Times New Roman", 18)
         self.font5 = pygame.font.SysFont("Arial", 55)
+        self.font6 = pygame.font.SysFont("Arial", 15, bold=True)
 
         self.WHITE = (255, 255, 255)
 
@@ -175,9 +179,8 @@ class Scene1(Scene):
         else:
             user = ""
         """
-        user = "Kai"
 
-        greeting_text = self.font5.render("Hi " + user + ",", True, self.WHITE)
+        greeting_text = self.font5.render("Hi " + NAME + ",", True, self.WHITE)
         greeting_text2 = self.font5.render("Good " + d + "!", True, self.WHITE)
         screen.blit(greeting_text, (x, y))
         screen.blit(greeting_text2, (x, y+65))
@@ -200,30 +203,27 @@ class Scene1(Scene):
         if condition not in self.icons:
             self.load_image(weather_info)
         icon = self.icons[condition]
-        screen.blit(icon, (x-10, y+100))
+        screen.blit(icon, (x-10, y+80))
         # display temperature
         temp = str(weather_info['temperature'])
         high = str(weather_info['high_c'])
         low = str(weather_info['low_c'])
 
-        temp_text = self.font1_bold.render(temp + "℃", True, self.WHITE)
-        temp_range_text = self.font1.render("24h: " + low + " - " + high + "℃", True, self.WHITE)
-        screen.blit(temp_text, (x+60, y+110))
+        temp_text = self.font1_bold.render(temp + "°", True, self.WHITE)
+        temp_range_text = self.font1.render("24h: " + low + " - " + high + "°", True, self.WHITE)
+        screen.blit(temp_text, (x+60, y+100))
         screen.blit(temp_range_text, (x, y+155))
 
-        # display forecast information
+        fx = x
         fy = y + 220
-        for forecast in weather_info['forecasts']:
-            forecast_time = forecast[0][11:13]
-            forecast_temp = "%.1f" % forecast[1]
-            forecast_text = self.font3.render(forecast_time + " " + forecast_temp + "℃", True, self.WHITE)
-            screen.blit(forecast_text, (x, fy))
-            fy += 45
+        graph_width = 500
+        graph_height = 300
+        drawWeatherGraph(screen, (fx, fy), (fx+graph_width, fy+graph_height), weather_info['forecasts'], self.font6)
 
         # display last update time
         last_update = time.asctime(time.localtime(weather_info['time']))[11:16]
         last_update_text = self.font4.render("Last update: " + last_update, True, self.WHITE)
-        screen.blit(last_update_text, (x, fy+10))
+        screen.blit(last_update_text, (x, fy+graph_height+50))
 
     def display_news(self, screen, coords):
         x, y = coords
@@ -302,6 +302,51 @@ def drawText(surface, text, color, rect, font, aa=False, bkg=None):
 
         # remove the text we just blitted
         text = text[i:]
+
+
+def drawWeatherGraph(surface, start, end, weather_info, font):
+    x1, y1 = start
+    x2, y2 = end
+
+    max_temp = max([info[1] for info in weather_info])
+    min_temp = min([info[1] for info in weather_info])
+    points = []
+    texts = []
+
+    # calculate positions for each point
+    for ind in range(len(weather_info)):
+        info = weather_info[ind]
+        weather_time = info[0][11:13]
+        temp = info[1]
+        texts.append((weather_time, temp))
+        point_x = int(x1 + 0.1 * (x2 - x1) + 0.8 * (x2 - x1) / (len(weather_info) - 1) * ind)
+        point_y = int(y2 - 0.2 * (y2 - y1) - 0.6 * (y2 - y1) / (max_temp - min_temp) * (temp - min_temp))
+        points.append((point_x, point_y))
+
+    p1 = (points[0][0], y2)
+    p2 = (points[-1][0], y2)
+    poly = [p1] + points + [p2]
+    pygame.draw.polygon(surface, (50, 50, 50), poly)
+
+    for ind in range(len(points)):
+        point = points[ind]
+        pygame.draw.circle(surface, WHITE, point, 4)
+        drawDashedLine(surface, point, (point[0], y2), (3, 3), WHITE)
+
+        if ind:
+            pygame.draw.line(surface, WHITE, point, points[ind - 1])
+
+        # add temperature and time information
+        weather_time, temp = texts[ind]
+        temp_text = font.render(str(int(temp)) + "°", True, WHITE)
+        time_text = font.render(weather_time, True, WHITE)
+
+        surface.blit(temp_text, (point[0] - 10, point[1] - 25))
+        surface.blit(time_text, (point[0] - 10, y2 + 7))
+
+    # draw x and y axis
+    pygame.draw.line(surface, WHITE, start, (x1, y2))
+    pygame.draw.line(surface, WHITE, (x1, y2), end)
 
 
 app = Interface()
